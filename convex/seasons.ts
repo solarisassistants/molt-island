@@ -120,6 +120,35 @@ export const setEndTime = internalMutation({
   },
 });
 
+export const getLastSeasonWinners = query({
+  handler: async (ctx) => {
+    const recentEvents = await ctx.db
+      .query("events")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(50);
+
+    const endedEvent = recentEvents.find(
+      (e: any) => e.type === "season_ended" && e.data.winners && e.data.winners.length > 0
+    );
+
+    if (!endedEvent) return null;
+
+    const season = await ctx.db.get(endedEvent.seasonId);
+
+    return {
+      seasonNumber: season?.number ?? 0,
+      winners: (endedEvent.data as any).winners as Array<{
+        place: number;
+        name: string;
+        score: number;
+        payout: number;
+      }>,
+      endedAt: endedEvent.timestamp,
+    };
+  },
+});
+
 // End a season manually (internal only - call via CLI: npx convex run seasons:end)
 export const end = internalMutation({
   args: { seasonId: v.id("seasons") },

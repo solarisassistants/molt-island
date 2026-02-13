@@ -4,7 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { LiveIndicator } from "./LiveIndicator";
 import dynamic from "next/dynamic";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { SeasonWinnerOverlay } from "./SeasonWinnerOverlay";
 
 // Dynamic import to avoid SSR issues with PixiJS
 const WorldMapCanvas = dynamic(
@@ -76,8 +77,20 @@ interface GameViewProps {
 export function GameView({ selectedAgentId, onAgentSelect }: GameViewProps) {
   const [tick, setTick] = useState(0);
   const [uptime, setUptime] = useState("0.0s");
+  const [dismissedSeasonNumber, setDismissedSeasonNumber] = useState<number | null>(null);
 
   const season = useQuery(api.seasons.getActive) as Season | null | undefined;
+  const lastWinners = useQuery(api.seasons.getLastSeasonWinners);
+
+  const showWinnerOverlay =
+    lastWinners != null &&
+    lastWinners.winners.length > 0 &&
+    lastWinners.seasonNumber !== dismissedSeasonNumber &&
+    Date.now() - lastWinners.endedAt < 60000;
+
+  const handleDismissWinners = useCallback(() => {
+    if (lastWinners) setDismissedSeasonNumber(lastWinners.seasonNumber);
+  }, [lastWinners]);
 
   const worldState = useQuery(
     api.game.getWorldState,
@@ -168,19 +181,37 @@ export function GameView({ selectedAgentId, onAgentSelect }: GameViewProps) {
             <div className="text-text-dim text-xs font-mono">CONNECTING...</div>
           </div>
         ) : !season ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-text-dim text-xs font-mono">NO ACTIVE SEASON</div>
+          <div className="flex-1 flex items-center justify-center relative">
+            <div className="text-text-dim text-xs font-mono">
+              {showWinnerOverlay ? "SEASON TRANSITION..." : "NO ACTIVE SEASON"}
+            </div>
+            {showWinnerOverlay && lastWinners && (
+              <SeasonWinnerOverlay
+                seasonNumber={lastWinners.seasonNumber}
+                winners={lastWinners.winners}
+                onDismiss={handleDismissWinners}
+              />
+            )}
           </div>
         ) : (
-          <WorldMapCanvas
-            agents={agents}
-            npcs={npcs}
-            combatEvents={combatEvents}
-            selectedAgentId={selectedAgentId}
-            onAgentClick={handleAgentClick}
-            onZoneClick={() => {}}
-            worldBounds={season.config.worldBounds}
-          />
+          <>
+            <WorldMapCanvas
+              agents={agents}
+              npcs={npcs}
+              combatEvents={combatEvents}
+              selectedAgentId={selectedAgentId}
+              onAgentClick={handleAgentClick}
+              onZoneClick={() => {}}
+              worldBounds={season.config.worldBounds}
+            />
+            {showWinnerOverlay && lastWinners && (
+              <SeasonWinnerOverlay
+                seasonNumber={lastWinners.seasonNumber}
+                winners={lastWinners.winners}
+                onDismiss={handleDismissWinners}
+              />
+            )}
+          </>
         )}
       </main>
 
