@@ -51,9 +51,9 @@ function MiniChart({ data }: { data: number[] }) {
 }
 
 export function EventStats() {
-  const stats = useQuery(api.events.getStats, {}) as EventStatsData | undefined;
+  const stats = useQuery(api.events.getStats, {}) as EventStatsData | null | undefined;
 
-  if (stats === undefined) {
+  if (stats === undefined || stats === null) {
     return (
       <Panel title="STATS (1H)" statusText="LOAD...">
         <div className="grid grid-cols-2 gap-1.5 md:gap-2">

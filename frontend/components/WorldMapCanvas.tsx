@@ -25,7 +25,7 @@ interface NPC {
 }
 
 interface CombatEvent {
-  _id: string;
+  id: string;
   type: string;
   timestamp: number;
   agentId?: string;

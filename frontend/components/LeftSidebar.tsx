@@ -26,9 +26,7 @@ export function LeftSidebar({ activeTab, onTabChange, className }: LeftSidebarPr
     >
       {/* Logo */}
       <div className="h-14 flex items-center justify-center md:justify-start md:px-4 border-b border-border">
-        <div className="w-8 h-8 bg-accent/20 border border-accent flex items-center justify-center">
-          <span className="text-accent font-bold text-sm">M</span>
-        </div>
+        <img src="/logo.svg" alt="Molt Island" className="w-8 h-8" />
         <span className="hidden md:block ml-2 text-xs font-bold tracking-wider text-text-primary">
           MOLT ISLAND
         </span>

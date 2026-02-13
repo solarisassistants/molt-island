@@ -57,7 +57,7 @@ interface WorldStateResponse {
 }
 
 interface Event {
-  _id: string;
+  id: string;
   type: string;
   timestamp: number;
   agentId?: string;
@@ -164,9 +164,12 @@ export function GameView({ selectedAgentId, onAgentSelect }: GameViewProps) {
     <div className="flex-1 flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="h-12 flex items-center justify-between px-4 border-b border-border bg-bg-panel">
-        <h1 className="text-sm md:text-base font-bold tracking-wider terminal-glow truncate">
-          MOLT ISLAND 🌴 - SOLARIS AI
-        </h1>
+        <div className="flex items-center gap-2">
+          <img src="/logo.svg" alt="Molt Island" className="w-6 h-6 hidden sm:block" />
+          <h1 className="text-sm md:text-base font-bold tracking-wider terminal-glow truncate">
+            MOLT ISLAND - SOLARIS AI
+          </h1>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-[10px] text-text-dim font-mono hidden sm:block">
             {aliveCount}/{totalCount} ALIVE
