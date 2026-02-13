@@ -1,1 +1,38 @@
+# Dependencies
+node_modules/
+
+# Environment files (contain secrets)
 .env
+.env.local
+.env*.local
+
+# Claude config (contains secrets)
+CLAUDE.md
+
+# OS files
+.DS_Store
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Convex generated (will regenerate)
+convex/_generated/
+frontend/convex/_generated/
+
+# Backup/duplicate files at root
+convex-*.ts
+convex-*.json
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel

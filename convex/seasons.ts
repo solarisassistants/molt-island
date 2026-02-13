@@ -1,0 +1,133 @@
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
+import { v } from "convex/values";
+import { WORLD_BOUNDS } from "./phases";
+
+export const get = internalQuery({
+  args: { id: v.id("seasons") },
+  handler: async (ctx, { id }) => ctx.db.get(id),
+});
+
+export const getActive = query({
+  handler: async (ctx) => {
+    return ctx.db
+      .query("seasons")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .first();
+  },
+});
+
+// Internal version for server-side calls
+export const getActiveInternal = internalQuery({
+  handler: async (ctx) => {
+    return ctx.db
+      .query("seasons")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .first();
+  },
+});
+
+export const addToPrizePool = internalMutation({
+  args: { seasonId: v.id("seasons"), amount: v.number() },
+  handler: async (ctx, { seasonId, amount }) => {
+    const season = await ctx.db.get(seasonId);
+    if (season) {
+      await ctx.db.patch(seasonId, { prizePool: season.prizePool + amount });
+    }
+  },
+});
+
+// Create a new season (internal only - call via CLI: npx convex run seasons:createInternal)
+export const create = internalMutation({
+  args: {
+    treasuryAddress: v.string(),
+    entryFee: v.optional(v.number()),
+    durationHours: v.optional(v.number()),
+    maxPlayers: v.optional(v.number()),
+  },
+  handler: async (ctx, { treasuryAddress, entryFee = 1000000, durationHours = 168, maxPlayers = 1000 }) => {
+    // End any currently active season
+    const activeSeason = await ctx.db
+      .query("seasons")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .first();
+
+    if (activeSeason) {
+      await ctx.db.patch(activeSeason._id, { status: "ended" });
+    }
+
+    // Get next season number
+    const allSeasons = await ctx.db.query("seasons").collect();
+    const nextNumber = allSeasons.length + 1;
+
+    const now = Date.now();
+    const seasonId = await ctx.db.insert("seasons", {
+      number: nextNumber,
+      status: "active",
+      startTime: now,
+      endTime: now + durationHours * 60 * 60 * 1000,
+      prizePool: 0,
+      entryFee,
+      treasuryAddress,
+      config: {
+        maxPlayers,
+        tickIntervalMs: 10000,
+        worldBounds: WORLD_BOUNDS,
+      },
+    });
+
+    // Initialize game state for this season
+    const secretSeed = Math.floor(Math.random() * 0x7fffffff);
+    await ctx.db.insert("gameState", {
+      seasonId,
+      tick: 0,
+      phase: "shallows",
+      rngSeed: now,
+      secretSeed,
+      lastTickAt: now,
+    });
+
+    // Emit season started event
+    await ctx.db.insert("events", {
+      seasonId,
+      tick: 0,
+      timestamp: now,
+      type: "season_started",
+      data: {
+        message: `Season ${nextNumber} has begun!`,
+      },
+    });
+
+    return { seasonId, number: nextNumber };
+  },
+});
+
+// End a season manually (internal only - call via CLI: npx convex run seasons:end)
+export const end = internalMutation({
+  args: { seasonId: v.id("seasons") },
+  handler: async (ctx, { seasonId }) => {
+    const season = await ctx.db.get(seasonId);
+    if (!season) throw new Error("Season not found");
+    if (season.status !== "active") throw new Error("Season is not active");
+
+    await ctx.db.patch(seasonId, { status: "ended", endTime: Date.now() });
+
+    // Get current tick
+    const gameState = await ctx.db
+      .query("gameState")
+      .withIndex("by_season", (q) => q.eq("seasonId", seasonId))
+      .first();
+
+    await ctx.db.insert("events", {
+      seasonId,
+      tick: gameState?.tick || 0,
+      timestamp: Date.now(),
+      type: "season_ended",
+      data: {
+        message: `Season ${season.number} has ended!`,
+        amount: season.prizePool,
+      },
+    });
+
+    return { success: true };
+  },
+});

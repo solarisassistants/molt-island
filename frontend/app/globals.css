@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0A0A0A;
+  --bg-panel: #0F0F0F;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-bright: rgba(255, 255, 255, 0.15);
+  --accent: #fb2981;
+  --success: #00FF88;
+  --text-primary: rgba(255, 255, 255, 0.85);
+  --text-secondary: rgba(255, 255, 255, 0.4);
+  --text-dim: rgba(255, 255, 255, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Dot grid background texture */
+.bg-grid {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Scanline overlay */
+.scanlines::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* CRT terminal text glow */
+.terminal-glow {
+  text-shadow: 0 0 2px rgba(255, 100, 255, 0.3);
+}
+
+.terminal-glow-green {
+  text-shadow: 0 0 3px rgba(0, 255, 136, 0.4);
+}
+
+.terminal-glow-accent {
+  text-shadow: 0 0 3px rgba(251, 41, 129, 0.4);
+}
+
+/* Pulsing animation for live elements */
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes countdown-pulse {
+  0%, 100% {
+    color: var(--text-primary);
+  }
+  50% {
+    color: var(--accent);
+  }
+}
+
+@keyframes bracket-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+.live-dot {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+.countdown-pulse {
+  animation: countdown-pulse 2s ease-in-out infinite;
+}
+
+.bracket-pulse {
+  animation: bracket-pulse 3s ease-in-out infinite;
+}
+
+/* Feed fade gradient at top */
+.feed-fade-top {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 100%);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-dim);
+  border-radius: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Zone colors */
+.zone-shallows {
+  background: rgba(13, 79, 79, 0.4);
+  border-color: rgba(0, 200, 255, 0.3);
+}
+
+.zone-awakening {
+  background: rgba(79, 79, 13, 0.4);
+  border-color: rgba(255, 200, 0, 0.3);
+}
+
+.zone-volcano {
+  background: rgba(79, 13, 13, 0.4);
+  border-color: rgba(255, 50, 50, 0.3);
+}
+
+/* Mini bar styles */
+.mini-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mini-bar-fill {
+  transition: width 0.3s ease;
+}
+
+/* Table row alternating */
+.table-row-alt:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Placeholder dashed row */
+.placeholder-row {
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Progress bar */
+.progress-bar-track {
+  background: rgba(255, 255, 255, 0.05);
+  height: 2px;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transition: width 0.5s ease;
+}
+
+/* Status indicator dot */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-dot-active {
+  background: var(--success);
+  box-shadow: 0 0 4px var(--success);
+}
+
+.status-dot-warning {
+  background: #ffaa00;
+  box-shadow: 0 0 4px #ffaa00;
+}
+
+/* Separator line */
+.stat-separator {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  align-self: stretch;
+}
