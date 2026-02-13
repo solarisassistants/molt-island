@@ -72,7 +72,7 @@ http.route({
 
     const url = new URL(req.url);
     const zoneParam = url.searchParams.get("zone") || undefined; // undefined = all zones
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
+    const limit = Math.min(Math.max(1, parseInt(url.searchParams.get("limit") || "50") || 50), 100);
 
     const result = await ctx.runQuery(api.game.getWorldState, {
       seasonId: agent.seasonId,
@@ -116,7 +116,7 @@ http.route({
       motto: agent.motto,
       prizeEligible: agent.prizeEligible,
       // Respawn info (if dead)
-      respawnAt: agent.respawnAt,
+      respawnAt: agent.respawnAt ?? null,
     });
   }),
 });
@@ -181,7 +181,7 @@ http.route({
   method: "GET",
   handler: httpAction(async (ctx, req) => {
     const url = new URL(req.url);
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
+    const limit = Math.min(Math.max(1, parseInt(url.searchParams.get("limit") || "50") || 50), 100);
     const result = await ctx.runQuery(api.game.getLeaderboard, { limit });
     return jsonResponse(result);
   }),

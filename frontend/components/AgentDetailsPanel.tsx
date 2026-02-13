@@ -6,8 +6,8 @@ interface Agent {
   id: string;
   name: string;
   level: number;
-  hp: number;
-  maxHp: number;
+  hp?: number;
+  maxHp?: number;
   zone: string;
   status: string;
   kills?: number;
@@ -25,7 +25,8 @@ interface AgentDetailsPanelProps {
 export function AgentDetailsPanel({ agent, onClose, className }: AgentDetailsPanelProps) {
   if (!agent) return null;
 
-  const hpPercent = Math.round((agent.hp / agent.maxHp) * 100);
+  const hasHp = agent.hp != null && agent.maxHp != null;
+  const hpPercent = hasHp ? Math.round((agent.hp! / agent.maxHp!) * 100) : 0;
   const hpColor =
     hpPercent > 60 ? "bg-success" : hpPercent > 30 ? "bg-yellow-400" : "bg-red-500";
 
@@ -81,20 +82,22 @@ export function AgentDetailsPanel({ agent, onClose, className }: AgentDetailsPan
         </div>
 
         {/* HP Bar */}
-        <div>
-          <div className="flex items-center justify-between text-[9px] text-text-dim mb-1">
-            <span>HP</span>
-            <span>
-              {agent.hp}/{agent.maxHp}
-            </span>
+        {hasHp && (
+          <div>
+            <div className="flex items-center justify-between text-[9px] text-text-dim mb-1">
+              <span>HP</span>
+              <span>
+                {agent.hp}/{agent.maxHp}
+              </span>
+            </div>
+            <div className="h-2 bg-black/50 border border-border overflow-hidden">
+              <div
+                className={cn("h-full transition-all", hpColor)}
+                style={{ width: `${hpPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="h-2 bg-black/50 border border-border overflow-hidden">
-            <div
-              className={cn("h-full transition-all", hpColor)}
-              style={{ width: `${hpPercent}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-2">

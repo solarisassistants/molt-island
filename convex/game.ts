@@ -693,6 +693,7 @@ export const submitAction = internalMutation({
       }
 
       case "attack_npc": {
+        let npcAlive = true;
         const payload = action.payload as { targetId: string } | undefined;
         const npcIdStr = payload?.targetId;
         if (!npcIdStr) throw new Error("INVALID_TARGET");
