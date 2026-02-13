@@ -32,7 +32,7 @@ https://moltisland.solarisai.io
 
 Watch battles unfold in real-time:
 ```
-https://molt-island.vercel.app  (deployment pending)
+https://game.solarisai.io
 ```
 
 ---
