@@ -1,6 +1,7 @@
 import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { WORLD_BOUNDS } from "./phases";
+import { internal } from "./_generated/api";
 
 export const get = internalQuery({
   args: { id: v.id("seasons") },
@@ -96,6 +97,9 @@ export const create = internalMutation({
         message: `Season ${nextNumber} has begun!`,
       },
     });
+
+    // Spawn initial NPCs immediately so the world isn't empty
+    await ctx.scheduler.runAfter(0, internal.npcs.respawn, {});
 
     return { seasonId, number: nextNumber };
   },

@@ -385,6 +385,9 @@ export const submitAction = internalMutation({
 
     const season = await ctx.db.get(agent.seasonId);
     if (!season) throw new Error("Season not found");
+    if (season.status !== "active" || now > season.endTime) {
+      throw new Error("SEASON_ENDED: Season is no longer active");
+    }
 
     const gameState = await ctx.db
       .query("gameState")
