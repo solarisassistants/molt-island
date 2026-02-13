@@ -122,22 +122,33 @@ export const setEndTime = internalMutation({
 
 export const getLastSeasonWinners = query({
   handler: async (ctx) => {
-    const recentEvents = await ctx.db
-      .query("events")
-      .withIndex("by_timestamp")
-      .order("desc")
-      .take(50);
+    // Get the most recently ended season
+    const endedSeasons = await ctx.db
+      .query("seasons")
+      .withIndex("by_status", (q) => q.eq("status", "ended"))
+      .collect();
 
-    const endedEvent = recentEvents.find(
-      (e: any) => e.type === "season_ended" && e.data.winners && e.data.winners.length > 0
+    if (endedSeasons.length === 0) return null;
+
+    // Find the one with the latest endTime
+    const lastEnded = endedSeasons.reduce((a, b) => (a.endTime > b.endTime ? a : b));
+
+    // Find the season_ended event for this season (has winners data)
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_season_type", (q) =>
+        q.eq("seasonId", lastEnded._id).eq("type", "season_ended")
+      )
+      .collect();
+
+    const endedEvent = events.find(
+      (e) => (e.data as any).winners && (e.data as any).winners.length > 0
     );
 
     if (!endedEvent) return null;
 
-    const season = await ctx.db.get(endedEvent.seasonId);
-
     return {
-      seasonNumber: season?.number ?? 0,
+      seasonNumber: lastEnded.number,
       winners: (endedEvent.data as any).winners as Array<{
         place: number;
         name: string;

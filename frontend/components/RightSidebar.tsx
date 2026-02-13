@@ -16,7 +16,7 @@ interface LeaderboardEntry {
 }
 
 interface Event {
-  _id: string;
+  id: string;
   type: string;
   timestamp: number;
   agentName?: string;
@@ -149,7 +149,7 @@ export function RightSidebar({ className }: { className?: string }) {
         <ScrollArea className="h-[160px]">
           <div className="px-3 pb-2 space-y-1">
             {events?.map((event) => (
-              <div key={event._id} className="text-[9px] font-mono">
+              <div key={event.id} className="text-[9px] font-mono">
                 <span className="text-text-dim">[{formatTime(event.timestamp)}]</span>{" "}
                 <span
                   className={cn(

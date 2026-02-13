@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface Winner {
@@ -24,12 +24,11 @@ export function SeasonWinnerOverlay({ seasonNumber, winners, onDismiss }: Season
     return () => clearTimeout(timer);
   }, []);
 
-  const stableDismiss = useCallback(onDismiss, [onDismiss]);
-
   useEffect(() => {
-    const timer = setTimeout(stableDismiss, 20000);
+    const timer = setTimeout(onDismiss, 20000);
     return () => clearTimeout(timer);
-  }, [stableDismiss]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatPayout = (lamports: number) =>
     `$${(lamports / 1_000_000).toFixed(2)}`;

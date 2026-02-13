@@ -88,9 +88,10 @@ export function GameView({ selectedAgentId, onAgentSelect }: GameViewProps) {
     lastWinners.seasonNumber !== dismissedSeasonNumber &&
     Date.now() - lastWinners.endedAt < 60000;
 
+  const lastWinnersSeasonNumber = lastWinners?.seasonNumber ?? null;
   const handleDismissWinners = useCallback(() => {
-    if (lastWinners) setDismissedSeasonNumber(lastWinners.seasonNumber);
-  }, [lastWinners]);
+    if (lastWinnersSeasonNumber !== null) setDismissedSeasonNumber(lastWinnersSeasonNumber);
+  }, [lastWinnersSeasonNumber]);
 
   const worldState = useQuery(
     api.game.getWorldState,

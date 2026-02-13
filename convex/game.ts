@@ -1084,6 +1084,12 @@ export const submitAction = internalMutation({
       }
     }
 
+    // Re-check if agent is still alive (NPC counterattack may have killed them)
+    const agentAfterAction = await ctx.db.get(agentId);
+    if (!agentAfterAction || agentAfterAction.status === "dead") {
+      return { ...result, action: action.type };
+    }
+
     // Check for level up (use currentXp which includes any XP gained this action)
     const newLevel = calculateLevel(currentXp);
     if (newLevel > agent.level) {
@@ -1389,7 +1395,7 @@ export const dispatchTick = internalMutation({
           await ctx.db.patch(npc._id, { positionX: newX, positionY: newY, bucketX, bucketY });
         }
 
-        if (!target && shouldMoveThisTick) {
+        if (!target && shouldMoveThisTick && npc.homeX != null && npc.homeY != null) {
           const dx = npc.homeX - npc.positionX;
           const dy = npc.homeY - npc.positionY;
           if (dx !== 0 || dy !== 0) {

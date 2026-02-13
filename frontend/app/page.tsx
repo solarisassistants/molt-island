@@ -15,14 +15,11 @@ interface Agent {
   id: string;
   name: string;
   level: number;
-  hp: number;
-  maxHp: number;
   zone: string;
   status: string;
-  kills?: number;
-  deaths?: number;
-  score?: number;
-  position?: { x: number; y: number };
+  kills: number;
+  deaths: number;
+  score: number;
 }
 
 interface LeaderboardEntry {
@@ -155,22 +152,20 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="bg-black/30 p-2 border border-border">
-                <div className="text-[8px] text-text-dim">HP</div>
-                <div className="text-xs font-bold">
-                  {selectedAgent.hp}/{selectedAgent.maxHp}
-                </div>
+                <div className="text-[8px] text-text-dim">LEVEL</div>
+                <div className="text-xs font-bold">{selectedAgent.level}</div>
               </div>
               <div className="bg-black/30 p-2 border border-border">
                 <div className="text-[8px] text-text-dim">KILLS</div>
-                <div className="text-xs font-bold">{selectedAgent.kills ?? 0}</div>
+                <div className="text-xs font-bold">{selectedAgent.kills}</div>
               </div>
               <div className="bg-black/30 p-2 border border-border">
                 <div className="text-[8px] text-text-dim">DEATHS</div>
-                <div className="text-xs font-bold">{selectedAgent.deaths ?? 0}</div>
+                <div className="text-xs font-bold">{selectedAgent.deaths}</div>
               </div>
               <div className="bg-black/30 p-2 border border-border">
                 <div className="text-[8px] text-text-dim">SCORE</div>
-                <div className="text-xs font-bold text-accent">{selectedAgent.score ?? 0}</div>
+                <div className="text-xs font-bold text-accent">{selectedAgent.score}</div>
               </div>
             </div>
           </div>

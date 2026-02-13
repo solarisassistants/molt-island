@@ -326,9 +326,9 @@ export function WorldMapCanvas({
           if (scanLineProgress > width + 50) scanLineProgress = -10;
           scanLine.x = scanLineProgress;
 
-          // Clear and redraw agents
-          if (agentsContainer) agentsContainer.removeChildren();
-          if (labelsContainer) labelsContainer.removeChildren();
+          // Clear and redraw agents (destroy old objects to prevent GPU memory leak)
+          if (agentsContainer) agentsContainer.removeChildren().forEach(c => c.destroy());
+          if (labelsContainer) labelsContainer.removeChildren().forEach(c => c.destroy());
 
           zones.forEach((zone, zoneIndex) => {
             const zoneAgents = tickerData.agentsByZone[zone] || [];
