@@ -448,18 +448,27 @@ export function WorldMapCanvas({
             agentsContainer!.addChild(npcBlip);
 
             // NPC type label
-            if (labelsContainer && npc.type === "boss_dragon") {
-              const bossStyle = new TextStyle({
+            if (labelsContainer) {
+              const npcLabels: Record<string, string> = {
+                slime: "SLIME",
+                goblin: "GOBLIN",
+                orc: "ORC",
+                troll: "TROLL",
+                boss_dragon: "BOSS",
+              };
+              const labelText = npcLabels[npc.type] || npc.type.toUpperCase();
+              const isBoss = npc.type === "boss_dragon";
+              const labelStyle = new TextStyle({
                 fontFamily: "JetBrains Mono, monospace",
-                fontSize: 7,
-                fill: 0xFF4400,
-                fontWeight: "bold",
+                fontSize: isBoss ? 7 : 6,
+                fill: isBoss ? 0xFF4400 : AGENT_COLORS.npc,
+                fontWeight: isBoss ? "bold" : "normal",
               });
-              const bossLabel = new Text({ text: "BOSS", style: bossStyle });
-              bossLabel.x = npcX - bossLabel.width / 2;
-              bossLabel.y = npcY - npcSize - 10;
-              bossLabel.alpha = 0.9;
-              labelsContainer.addChild(bossLabel);
+              const npcLabel = new Text({ text: labelText, style: labelStyle });
+              npcLabel.x = npcX - npcLabel.width / 2;
+              npcLabel.y = npcY - npcSize - 10;
+              npcLabel.alpha = isBoss ? 0.9 : 0.6;
+              labelsContainer.addChild(npcLabel);
             }
           });
 
