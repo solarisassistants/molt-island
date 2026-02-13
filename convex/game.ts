@@ -1702,6 +1702,14 @@ export const checkSeasonEnd = internalMutation({
         message: `Season ${season.number} ended! Winner: ${winners[0]?.name ?? "N/A"}`,
       },
     });
+
+    // Auto-start next season (same config, 7-day duration)
+    await ctx.scheduler.runAfter(0, internal.seasons.create, {
+      treasuryAddress: season.treasuryAddress,
+      entryFee: season.entryFee,
+      durationHours: 168,
+      maxPlayers: season.config.maxPlayers,
+    });
   },
 });
 

@@ -101,6 +101,21 @@ export const create = internalMutation({
   },
 });
 
+// Set end time for active season (internal only - call via CLI)
+export const setEndTime = internalMutation({
+  args: { hoursFromNow: v.number() },
+  handler: async (ctx, { hoursFromNow }) => {
+    const season = await ctx.db
+      .query("seasons")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .first();
+    if (!season) throw new Error("No active season");
+    const newEndTime = Date.now() + hoursFromNow * 60 * 60 * 1000;
+    await ctx.db.patch(season._id, { endTime: newEndTime });
+    return { seasonId: season._id, newEndTime, endsAt: new Date(newEndTime).toISOString() };
+  },
+});
+
 // End a season manually (internal only - call via CLI: npx convex run seasons:end)
 export const end = internalMutation({
   args: { seasonId: v.id("seasons") },
