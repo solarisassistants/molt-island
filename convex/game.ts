@@ -148,6 +148,19 @@ export const getWorldState = query({
       allAgents.push(...zoneAgents);
     }
 
+    // Global sort by distance from viewer (not just per-zone)
+    allAgents.sort((a, b) => {
+      const distA = Math.sqrt(
+        Math.pow(a.positionX - viewerPosition.x, 2) +
+        Math.pow(a.positionY - viewerPosition.y, 2)
+      );
+      const distB = Math.sqrt(
+        Math.pow(b.positionX - viewerPosition.x, 2) +
+        Math.pow(b.positionY - viewerPosition.y, 2)
+      );
+      return distA - distB;
+    });
+
     const result = allAgents.slice(0, limit).map((a) => ({
       id: a._id,
       name: a.name,
@@ -821,8 +834,8 @@ export const submitAction = internalMutation({
           });
         }
 
-        // All NPCs counterattack when attacked (passive, defensive, AND aggressive)
-        if (npcAlive) {
+        // All NPCs counterattack when attacked (if within NPC attack range)
+        if (npcAlive && distance <= NPC_ATTACK_RANGE) {
           const now = Date.now();
           if (!(agent.spawnProtectionUntil && agent.spawnProtectionUntil > now)) {
             if (!npc.lastAttackAt || now - npc.lastAttackAt >= NPC_ATTACK_COOLDOWN_MS) {
@@ -1627,7 +1640,6 @@ export const checkSeasonEnd = internalMutation({
 
     const now = Date.now();
     if (now < season.endTime) return;
-    if (now < season.endTime + 5 * 60 * 1000) return;
 
     const agents = await ctx.db
       .query("agents")

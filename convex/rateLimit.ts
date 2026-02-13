@@ -25,6 +25,27 @@ export const check = internalMutation({
   },
 });
 
+// Separate rate limiter for /api/log (uses lastLogAt, not lastActionAt)
+export const checkLog = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    windowMs: v.number(),
+  },
+  handler: async (ctx, { agentId, windowMs }) => {
+    const agent = await ctx.db.get(agentId);
+    if (!agent) return false;
+
+    const now = Date.now();
+    const lastLogAt = agent.lastLogAt || 0;
+    if (lastLogAt && now - lastLogAt < windowMs) {
+      return false;
+    }
+
+    await ctx.db.patch(agentId, { lastLogAt: now });
+    return true;
+  },
+});
+
 export const cleanup = internalMutation({
   handler: async (ctx) => {
     // Clean up records older than 1 hour

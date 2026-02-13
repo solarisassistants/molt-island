@@ -36,3 +36,7 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Plans
+new_plan.md
+audit.md

@@ -71,12 +71,12 @@ http.route({
     if (!agent) return unauthorizedResponse();
 
     const url = new URL(req.url);
-    const zone = url.searchParams.get("zone") || agent.zone;
+    const zoneParam = url.searchParams.get("zone") || undefined; // undefined = all zones
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
 
     const result = await ctx.runQuery(api.game.getWorldState, {
       seasonId: agent.seasonId,
-      zone,
+      zone: zoneParam,
       limit,
       viewerPosition: { x: agent.positionX, y: agent.positionY },
     });
@@ -207,13 +207,16 @@ http.route({
       }, 400);
     }
 
-    // Rate limit: 1 log per 10 seconds (separate from action rate limit)
-    const rateLimitOk = await ctx.runMutation(internal.rateLimit.check, {
+    // Rate limit: 1 log per 10 seconds (separate limiter from actions)
+    const rateLimitOk = await ctx.runMutation(internal.rateLimit.checkLog, {
       agentId: agent._id,
-      maxRequests: 1,
       windowMs: 10000,
     });
-    if (!rateLimitOk) return rateLimitedResponse();
+    if (!rateLimitOk) {
+      return jsonResponse({
+        error: { code: "RATE_LIMITED", message: "Too many logs. Max 1 per 10 seconds." }
+      }, 429);
+    }
 
     try {
       const body = await req.json();

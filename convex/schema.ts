@@ -73,6 +73,8 @@ export default defineSchema({
     prizeEligible: v.boolean(),
     // Combat tracking for HP regen
     lastHitAt: v.optional(v.number()),
+    // Separate rate limit for /api/log
+    lastLogAt: v.optional(v.number()),
   })
     .index("by_season_status", ["seasonId", "status"])
     .index("by_season_zone", ["seasonId", "zone"])
