@@ -275,6 +275,12 @@ export const submitAction = internalMutation({
     let agent = await ctx.db.get(agentId);
     if (!agent) throw new Error("Agent not found");
 
+    // Reject oversized payloads
+    const payloadStr = JSON.stringify(action.payload || {});
+    if (payloadStr.length > 500) {
+      throw new Error("Payload too large");
+    }
+
     const now = Date.now();
 
     // Check if dead agent can respawn (5 second delay)
@@ -1704,3 +1710,19 @@ export const maintenance = internalMutation({
 
 // REMOVED: processAgentTick - now inlined in dispatchTick for batch processing
 // This eliminates N scheduler calls per tick, reducing from 1+N to 1 function call
+
+export const cleanupActions = internalMutation({
+  handler: async (ctx) => {
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+    const oldActions = await ctx.db
+      .query("actions")
+      .withIndex("by_season_tick")
+      .filter((q) => q.lt(q.field("timestamp"), twoHoursAgo))
+      .take(500);
+
+    for (const action of oldActions) {
+      await ctx.db.delete(action._id);
+    }
+    return { deleted: oldActions.length };
+  },
+});

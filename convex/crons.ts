@@ -13,24 +13,24 @@ crons.interval(
   internal.game.maintenance
 );
 
-// Phase transition check: every minute
+// Phase transition check: every 5 minutes
 crons.interval(
   "phase-check",
-  { minutes: 1 },
+  { minutes: 5 },
   internal.game.checkPhaseTransition
 );
 
-// Season end check: every minute
+// Season end check: every 5 minutes
 crons.interval(
   "season-end-check",
-  { minutes: 1 },
+  { minutes: 5 },
   internal.game.checkSeasonEnd
 );
 
-// Transaction confirmation check: every 30 seconds
+// Transaction confirmation check: every 5 minutes
 crons.interval(
   "tx-confirmation",
-  { seconds: 30 },
+  { minutes: 5 },
   internal.payments.checkPendingTransactions
 );
 
@@ -53,6 +53,13 @@ crons.interval(
   "events-cleanup",
   { hours: 6 },
   internal.events.cleanup
+);
+
+// Actions cleanup: every hour (keep last 2 hours)
+crons.interval(
+  "actions-cleanup",
+  { hours: 1 },
+  internal.game.cleanupActions
 );
 
 export default crons;

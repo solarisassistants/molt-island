@@ -24,6 +24,17 @@ export const createAgent = internalMutation({
       return { success: false, error: "No active season" };
     }
 
+    // Rate limit registrations: max 5 per minute globally
+    const oneMinuteAgo = Date.now() - 60000;
+    const recentAgents = await ctx.db
+      .query("agents")
+      .withIndex("by_season", (q) => q.eq("seasonId", season._id))
+      .filter((q) => q.gt(q.field("createdAt"), oneMinuteAgo))
+      .collect();
+    if (recentAgents.length >= 5) {
+      return { success: false, error: "Too many registrations. Try again in a minute." };
+    }
+
     const maxPlayers = season.config.maxPlayers;
     const existingAgents = await ctx.db
       .query("agents")
