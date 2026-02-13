@@ -132,13 +132,14 @@ http.route({
     const agent = await ctx.runAction(internal.auth.verifyApiKey, { apiKey });
     if (!agent) return unauthorizedResponse();
 
-    if (agent.status !== "alive") {
+    // Allow dead agents through for auto-respawn (submitAction handles respawn logic)
+    if (agent.status !== "alive" && agent.status !== "dead") {
       return jsonResponse({
         error: { code: "NOT_ALIVE", message: `Cannot act while ${agent.status}` }
       }, 400);
     }
 
-    if (agent.cooldownUntil > Date.now()) {
+    if (agent.status === "alive" && agent.cooldownUntil > Date.now()) {
       return jsonResponse({
         error: {
           code: "COOLDOWN_ACTIVE",

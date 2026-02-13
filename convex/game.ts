@@ -292,7 +292,9 @@ export const submitAction = internalMutation({
       // Auto-respawn on first action after timer expires
       const season = await ctx.db.get(agent.seasonId);
       if (!season) throw new Error("Season not found");
-      const bounds = season.config.worldBounds.shallows;
+      // Respawn in same zone (not shallows) - matches SKILL.md
+      const respawnZone = agent.zone;
+      const bounds = season.config.worldBounds[respawnZone];
       const respawnSeed = hashString(agentId) + now + agent.deaths;
       const respawnRng = seededRandom(respawnSeed);
       const newX = Math.floor(respawnRng() * (bounds.maxX - bounds.minX)) + bounds.minX;
@@ -303,7 +305,7 @@ export const submitAction = internalMutation({
       await ctx.db.patch(agentId, {
         status: "alive",
         hp: agent.maxHp,
-        zone: "shallows",
+        zone: respawnZone,
         positionX: newX,
         positionY: newY,
         bucketX,
@@ -819,7 +821,8 @@ export const submitAction = internalMutation({
           });
         }
 
-        if (npcAlive && (npcType.behavior === "passive" || npcType.behavior === "defensive")) {
+        // All NPCs counterattack when attacked (passive, defensive, AND aggressive)
+        if (npcAlive) {
           const now = Date.now();
           if (!(agent.spawnProtectionUntil && agent.spawnProtectionUntil > now)) {
             if (!npc.lastAttackAt || now - npc.lastAttackAt >= NPC_ATTACK_COOLDOWN_MS) {
@@ -1095,6 +1098,43 @@ export const submitAction = internalMutation({
           message: `${agent.name} reached level ${newLevel}!`,
         },
       });
+
+      // Instant zone transition on level-up (don't wait for cron)
+      let newZone: Zone = agent.zone;
+      if (agent.zone === "shallows" && newLevel >= 11) newZone = "awakening";
+      else if (agent.zone === "awakening" && newLevel >= 21) newZone = "volcano";
+
+      if (newZone !== agent.zone) {
+        const newBounds = season.config.worldBounds[newZone];
+        const transSeed = hashString(agentId) + tick + newLevel;
+        const transRng = seededRandom(transSeed);
+        const transX = Math.floor(transRng() * (newBounds.maxX - newBounds.minX)) + newBounds.minX;
+        const transY = Math.floor(transRng() * (newBounds.maxY - newBounds.minY)) + newBounds.minY;
+        await ctx.db.patch(agentId, {
+          zone: newZone,
+          positionX: transX,
+          positionY: transY,
+          bucketX: getBucketIndex(transX, newBounds.minX),
+          bucketY: getBucketIndex(transY, newBounds.minY),
+        });
+        result.zoneTransition = { from: agent.zone, to: newZone, newPosition: { x: transX, y: transY } };
+
+        await ctx.db.insert("events", {
+          seasonId: agent.seasonId,
+          tick,
+          timestamp: Date.now(),
+          type: "zone_transition",
+          agentId,
+          agentName: agent.name,
+          data: {
+            fromZone: agent.zone,
+            toZone: newZone,
+            positionX: transX,
+            positionY: transY,
+            message: `${agent.name} advanced to ${newZone}!`,
+          },
+        });
+      }
     }
 
     await ctx.db.patch(agentId, { actionNonce: nextActionNonce });
